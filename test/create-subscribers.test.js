@@ -1,9 +1,9 @@
-import createListener from '../src/.internal/create-listener'
+import createSubscribers from '../src/.internal/create-subscribers'
 
 describe('creation', () => {
     it('should return object with methods', () => {
-        const listener = createListener()
-        expect(listener).toEqual(
+        const subscribers = createSubscribers()
+        expect(subscribers).toEqual(
             expect.objectContaining({
                 add: expect.any(Function),
                 remove: expect.any(Function),
@@ -20,10 +20,10 @@ describe('.add', () => {
             publisher: null,
             subscribers: []
         }
-        const listener = createListener(() => {})
-        listener.add(event, 'a')
-        listener.add(event, 'b')
-        listener.add(event, 'c')
+        const subscribers = createSubscribers(() => {})
+        subscribers.add(event, 'a')
+        subscribers.add(event, 'b')
+        subscribers.add(event, 'c')
         expect(event.subscribers).toEqual(['a', 'b', 'c'])
     })
 
@@ -34,17 +34,17 @@ describe('.add', () => {
             subscribers: []
         }
         const addEventListener = jest.fn()
-        const listener = createListener(addEventListener)
+        const subscribers = createSubscribers(addEventListener)
 
-        listener.add(event, 'a')
+        subscribers.add(event, 'a')
         expect(event.subscribers).toEqual(['a'])
         expect(addEventListener.mock.calls).toEqual([
             ['scroll', 'publisher'],
             ['resize', 'publisher']
         ])
-        listener.add(event, 'b')
+        subscribers.add(event, 'b')
         expect(event.subscribers).toEqual(['a', 'b'])
-        listener.add(event, 'c')
+        subscribers.add(event, 'c')
         expect(event.subscribers).toEqual(['a', 'b', 'c'])
     })
 })
@@ -56,8 +56,8 @@ describe('.remove', () => {
             publisher: null,
             subscribers: ['a', 'b', 'c']
         }
-        const listener = createListener(null, () => {})
-        listener.remove(event, 'b')
+        const subscribers = createSubscribers(null, () => {})
+        subscribers.remove(event, 'b')
         expect(event.subscribers).toEqual(['a', 'c'])
     })
 
@@ -68,17 +68,17 @@ describe('.remove', () => {
             subscribers: ['a', 'b', 'c']
         }
         const removeEventListener = jest.fn()
-        const listener = createListener(null, removeEventListener)
+        const subscribers = createSubscribers(null, removeEventListener)
 
-        listener.remove(event, 'b')
+        subscribers.remove(event, 'b')
         expect(event.subscribers).toEqual(['a', 'c'])
         expect(removeEventListener).toHaveBeenCalledTimes(0)
 
-        listener.remove(event, 'c')
+        subscribers.remove(event, 'c')
         expect(event.subscribers).toEqual(['a'])
         expect(removeEventListener).toHaveBeenCalledTimes(0)
 
-        listener.remove(event, 'a')
+        subscribers.remove(event, 'a')
         expect(event.subscribers).toEqual([])
         expect(removeEventListener).toHaveBeenCalledTimes(2)
         expect(removeEventListener.mock.calls).toEqual([
@@ -95,8 +95,8 @@ describe('.removeAll', () => {
             publisher: null,
             subscribers: ['a', 'b', 'c']
         }
-        const listener = createListener(null, () => {})
-        listener.removeAll(event)
+        const subscribers = createSubscribers(null, () => {})
+        subscribers.removeAll(event)
         expect(event.subscribers).toEqual([])
     })
 
@@ -107,9 +107,9 @@ describe('.removeAll', () => {
             subscribers: ['a', 'b', 'c']
         }
         const removeEventListener = jest.fn()
-        const listener = createListener(null, removeEventListener)
+        const subscribers = createSubscribers(null, removeEventListener)
 
-        listener.removeAll(event)
+        subscribers.removeAll(event)
         expect(event.subscribers).toEqual([])
         expect(removeEventListener).toHaveBeenCalledTimes(2)
         expect(removeEventListener.mock.calls).toEqual([

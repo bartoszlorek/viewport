@@ -24,11 +24,11 @@ function removeEventListener(elem, event, fn) {
     }
 }
 
-function mapArguments(args, methods) {
+function mapArguments(view, args, methods) {
     if (args != null) {
         return function () {
-            return args.map(function (a) {
-                return methods[a]();
+            return args.map(function (arg) {
+                return methods[arg](view, view.document);
             });
         };
     }
@@ -37,7 +37,7 @@ function mapArguments(args, methods) {
     };
 }
 
-function createEvents(schema, methods) {
+function createEvents(view, schema, methods) {
     var events = {};
 
     Object.keys(schema).forEach(function (name) {
@@ -46,7 +46,7 @@ function createEvents(schema, methods) {
             type = _schema$name.type,
             args = _schema$name.args;
 
-        var execArguments = mapArguments(args, methods);
+        var execArguments = mapArguments(view, args, methods);
 
         var self = {
             type: type,
@@ -77,7 +77,7 @@ function createEvents(schema, methods) {
     return events;
 }
 
-function createListener(addEventListener, removeEventListener) {
+function createSubscribers(addEventListener, removeEventListener) {
 
     var addPublisher = function addPublisher(_ref) {
         var type = _ref.type,
@@ -143,17 +143,17 @@ var EVENT_SCHEMA = {
 };
 
 var EVENT_METHODS = {
-    width: function width() {
-        return window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+    width: function width(win, doc) {
+        return win.innerWidth || doc.documentElement.clientWidth || doc.body.clientWidth;
     },
-    height: function height() {
-        return window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+    height: function height(win, doc) {
+        return win.innerHeight || doc.documentElement.clientHeight || doc.body.clientHeight;
     },
-    scrollX: function scrollX() {
-        return window.scrollX || window.pageXOffset;
+    scrollX: function scrollX(win, doc) {
+        return win.scrollX || win.pageXOffset;
     },
-    scrollY: function scrollY() {
-        return window.scrollY || window.pageYOffset;
+    scrollY: function scrollY(win, doc) {
+        return win.scrollY || win.pageYOffset;
     }
 };
 
@@ -162,7 +162,7 @@ var EVENT_METHODS = {
 function createViewport() {
     var view = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : window;
 
-    var events = createEvents(EVENT_SCHEMA, EVENT_METHODS);
+    var events = createEvents(view, EVENT_SCHEMA, EVENT_METHODS);
 
     var getValidEvent = function getValidEvent(name) {
         if (!events[name]) {
@@ -171,13 +171,13 @@ function createViewport() {
         return events[name];
     };
 
-    var listener = createListener(addEventListener.bind(null, view), removeEventListener.bind(null, view));
+    var subscribers = createSubscribers(addEventListener.bind(null, view), removeEventListener.bind(null, view));
 
     var api = {
         on: function on(name, fn) {
             var event = getValidEvent(name);
             if (typeof fn === 'function') {
-                listener.add(event, fn);
+                subscribers.add(event, fn);
             }
             return api;
         },
@@ -185,14 +185,14 @@ function createViewport() {
         off: function off(name, fn) {
             if (name === undefined) {
                 Object.keys(events).forEach(function (name) {
-                    listener.removeAll(events[name]);
+                    subscribers.removeAll(events[name]);
                 });
             } else {
                 var event = getValidEvent(name);
                 if (typeof fn === 'function') {
-                    listener.remove(event, fn);
+                    subscribers.remove(event, fn);
                 } else if (fn === undefined) {
-                    listener.removeAll(event);
+                    subscribers.removeAll(event);
                 }
             }
             return api;

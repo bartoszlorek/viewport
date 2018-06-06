@@ -1,5 +1,8 @@
 import createEvents from '../src/.internal/create-events'
 
+const view = {
+    document: null
+}
 const schema = {
     resize: {
         type: ['resize'],
@@ -12,7 +15,7 @@ const methods = {
 }
 
 it('should create components for each event', () => {
-    const events = createEvents(schema, methods)
+    const events = createEvents(view, schema, methods)
     expect(events).toEqual(
         expect.objectContaining({
             resize: {
@@ -25,7 +28,7 @@ it('should create components for each event', () => {
 })
 
 it('should loop over subscribers with cache', () => {
-    const events = createEvents(schema, methods)
+    const events = createEvents(view, schema, methods)
     const subA = jest.fn()
     const subB = jest.fn()
 
@@ -42,7 +45,7 @@ it('should loop over subscribers with cache', () => {
 })
 
 it('should loop over subscribers without cache (force update)', () => {
-    const events = createEvents(schema, methods)
+    const events = createEvents(view, schema, methods)
     const subA = jest.fn()
     const subB = jest.fn()
 
@@ -64,7 +67,7 @@ it('should loop over subscribers and update cache', () => {
         width: jest.fn(() => 800 + counter++),
         height: jest.fn(() => 600 + counter++)
     }
-    const events = createEvents(schema, dynamicMethods)
+    const events = createEvents(view, schema, dynamicMethods)
     const subA = jest.fn()
     const subB = jest.fn()
 

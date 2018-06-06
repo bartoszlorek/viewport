@@ -1,4 +1,4 @@
-function createListener(addEventListener, removeEventListener) {
+function createSubscribers(addEventListener, removeEventListener) {
 
     const addPublisher = ({ type, publisher }) => {
         type.forEach(name => addEventListener(name, publisher))
@@ -36,4 +36,4 @@ function createListener(addEventListener, removeEventListener) {
     }
 }
 
-export default createListener
+export default createSubscribers

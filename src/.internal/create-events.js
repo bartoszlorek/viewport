@@ -1,12 +1,12 @@
 import mapArguments from './map-arguments'
 
-function createEvents(schema, methods) {
+function createEvents(view, schema, methods) {
     const events = {}
 
     Object.keys(schema).forEach(name => {
         let cachedValues = []
         const { type, args } = schema[name]
-        const execArguments = mapArguments(args, methods)
+        const execArguments = mapArguments(view, args, methods)
 
         const self = {
             type,

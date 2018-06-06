@@ -1,18 +1,18 @@
 export default {
-    width: () => (
-        window.innerWidth ||
-        document.documentElement.clientWidth ||
-        document.body.clientWidth
+    width: (win, doc) => (
+        win.innerWidth ||
+        doc.documentElement.clientWidth ||
+        doc.body.clientWidth
     ),
-    height: () => (
-        window.innerHeight ||
-        document.documentElement.clientHeight ||
-        document.body.clientHeight
+    height: (win, doc) => (
+        win.innerHeight ||
+        doc.documentElement.clientHeight ||
+        doc.body.clientHeight
     ),
-    scrollX: () => (
-        window.scrollX || window.pageXOffset
+    scrollX: (win, doc) => (
+        win.scrollX || win.pageXOffset
     ),
-    scrollY: () => (
-        window.scrollY || window.pageYOffset
+    scrollY: (win, doc) => (
+        win.scrollY || win.pageYOffset
     )
 }

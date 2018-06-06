@@ -3,13 +3,13 @@
 
 import { addEventListener, removeEventListener } from './.utils/event-listener'
 import createEvents from './.internal/create-events'
-import createListener from './.internal/create-listener'
+import createSubscribers from './.internal/create-subscribers'
 
 import EVENT_SCHEMA from './event-schema'
 import EVENT_METHODS from './event-methods'
 
 function createViewport(view = window) {
-    const events = createEvents(EVENT_SCHEMA, EVENT_METHODS)
+    const events = createEvents(view, EVENT_SCHEMA, EVENT_METHODS)
 
     const getValidEvent = name => {
         if (!events[name]) {
@@ -18,7 +18,7 @@ function createViewport(view = window) {
         return events[name]
     }
 
-    const listener = createListener(
+    const subscribers = createSubscribers(
         addEventListener.bind(null, view),
         removeEventListener.bind(null, view)
     )
@@ -27,7 +27,7 @@ function createViewport(view = window) {
         on: (name, fn) => {
             let event = getValidEvent(name)
             if (typeof fn === 'function') {
-                listener.add(event, fn)
+                subscribers.add(event, fn)
             }
             return api
         },
@@ -35,14 +35,14 @@ function createViewport(view = window) {
         off: (name, fn) => {
             if (name === undefined) {
                 Object.keys(events).forEach(name => {
-                    listener.removeAll(events[name])
+                    subscribers.removeAll(events[name])
                 })
             } else {
                 let event = getValidEvent(name)
                 if (typeof fn === 'function') {
-                    listener.remove(event, fn)
+                    subscribers.remove(event, fn)
                 } else if (fn === undefined) {
-                    listener.removeAll(event)
+                    subscribers.removeAll(event)
                 }
             }
             return api
