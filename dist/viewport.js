@@ -37,88 +37,64 @@ function mapArguments(view, args, methods) {
     };
 }
 
-var classCallCheck = function (instance, Constructor) {
-  if (!(instance instanceof Constructor)) {
-    throw new TypeError("Cannot call a class as a function");
+var toConsumableArray = function (arr) {
+  if (Array.isArray(arr)) {
+    for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
+
+    return arr2;
+  } else {
+    return Array.from(arr);
   }
 };
 
-var createClass = function () {
-  function defineProperties(target, props) {
-    for (var i = 0; i < props.length; i++) {
-      var descriptor = props[i];
-      descriptor.enumerable = descriptor.enumerable || false;
-      descriptor.configurable = true;
-      if ("value" in descriptor) descriptor.writable = true;
-      Object.defineProperty(target, descriptor.key, descriptor);
-    }
-  }
+function Container(items, loaded, unloaded) {
+    this.items = items != null ? [].concat(toConsumableArray(items)) : [];
+    this.loaded = loaded || null;
+    this.unloaded = unloaded || null;
+}
 
-  return function (Constructor, protoProps, staticProps) {
-    if (protoProps) defineProperties(Constructor.prototype, protoProps);
-    if (staticProps) defineProperties(Constructor, staticProps);
-    return Constructor;
-  };
-}();
+Container.prototype = {
+    get length() {
+        return this.items.length;
+    },
 
-var Container = function () {
-    function Container(loaded, unloaded) {
-        classCallCheck(this, Container);
-
-        this.items = [];
-        this.loaded = loaded || null;
-        this.unloaded = unloaded || null;
-    }
-
-    createClass(Container, [{
-        key: "add",
-        value: function add(item) {
-            var index = this.items.indexOf(item);
-            if (index === -1) {
-                this.items.push(item);
-                if (this.loaded && this.items.length === 1) {
-                    this.loaded(this);
-                }
+    add: function add(item) {
+        var index = this.items.indexOf(item);
+        if (index === -1) {
+            this.items.push(item);
+            if (this.loaded && this.items.length === 1) {
+                this.loaded(this);
             }
         }
-    }, {
-        key: "remove",
-        value: function remove(item) {
-            var index = this.items.indexOf(item);
-            if (index > -1) {
-                this.items.splice(index, 1);
-                if (this.unloaded && !this.items.length) {
-                    this.unloaded(this);
-                }
-            }
-        }
-    }, {
-        key: "empty",
-        value: function empty() {
-            this.items = [];
-            if (this.unloaded) {
+    },
+
+    remove: function remove(item) {
+        var index = this.items.indexOf(item);
+        if (index > -1) {
+            this.items.splice(index, 1);
+            if (this.unloaded && !this.items.length) {
                 this.unloaded(this);
             }
         }
-    }, {
-        key: "forEach",
-        value: function forEach(iteratee) {
-            var index = -1;
-            var length = this.items.length;
-            while (++index < length) {
-                if (iteratee(this.items[index], index, this.items) === false) {
-                    return;
-                }
+    },
+
+    empty: function empty() {
+        this.items = [];
+        if (this.unloaded) {
+            this.unloaded(this);
+        }
+    },
+
+    forEach: function forEach(iteratee) {
+        var index = -1;
+        var length = this.items.length;
+        while (++index < length) {
+            if (iteratee(this.items[index], index, this.items) === false) {
+                return;
             }
         }
-    }, {
-        key: "length",
-        get: function get$$1() {
-            return this.items.length;
-        }
-    }]);
-    return Container;
-}();
+    }
+};
 
 function createEvent(runtime) {
 
@@ -132,15 +108,14 @@ function createEvent(runtime) {
             addEventListener(view, name, publisher);
         });
     };
-
     var removeEventPublisher = function removeEventPublisher(_ref2) {
         var type = _ref2.type,
             publisher = _ref2.publisher;
         var view = runtime.view,
-            addEventListener = runtime.addEventListener;
+            removeEventListener = runtime.removeEventListener;
 
         type.forEach(function (name) {
-            addEventListener(view, name, publisher);
+            removeEventListener(view, name, publisher);
         });
     };
 
@@ -149,9 +124,8 @@ function createEvent(runtime) {
 
         var execArgs = mapArguments(runtime.view, options.args, methods);
         var self = {};
-
         self.type = options.type;
-        self.subscribers = new Container(function () {
+        self.subscribers = new Container(null, function () {
             return addEventPublisher(self);
         }, function () {
             return removeEventPublisher(self);
