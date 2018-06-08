@@ -1,15 +1,15 @@
-class Container {
-    constructor(loaded, unloaded) {
-        this.items = []
-        this.loaded = loaded || null
-        this.unloaded = unloaded || null
-    }
+function Container(items, loaded, unloaded) {
+    this.items = items != null ? [...items] : []
+    this.loaded = loaded || null
+    this.unloaded = unloaded || null
+}
 
+Container.prototype = {
     get length() {
         return this.items.length
-    }
+    },
 
-    add(item) {
+    add: function(item) {
         let index = this.items.indexOf(item)
         if (index === -1) {
             this.items.push(item)
@@ -17,9 +17,9 @@ class Container {
                 this.loaded(this)
             }
         }
-    }
+    },
 
-    remove(item) {
+    remove: function(item) {
         let index = this.items.indexOf(item)
         if (index > -1) {
             this.items.splice(index, 1)
@@ -27,16 +27,16 @@ class Container {
                 this.unloaded(this)
             }
         }
-    }
+    },
 
-    empty() {
+    empty: function() {
         this.items = []
         if (this.unloaded) {
             this.unloaded(this)
         }
-    }
+    },
 
-    forEach(iteratee) {
+    forEach: function(iteratee) {
         let index = -1
         const length = this.items.length
         while (++index < length) {
