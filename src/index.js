@@ -2,14 +2,24 @@
 // IE9+, Firefox, Chrome, Safari, Opera
 
 import { addEventListener, removeEventListener } from './.utils/event-listener'
-import createEvents from './.internal/create-events'
-import createSubscribers from './.internal/create-subscribers'
+import makeCreateEvent from './.internal/create-event'
 
-import EVENT_SCHEMA from './event-schema'
+import EVENT_OPTIONS from './event-options'
 import EVENT_METHODS from './event-methods'
 
 function createViewport(view = window) {
-    const events = createEvents(view, EVENT_SCHEMA, EVENT_METHODS)
+    const events = {}
+    const createEvent = makeCreateEvent({
+        addEventListener,
+        removeEventListener,
+        view
+    })
+    Object.keys(EVENT_OPTIONS).forEach(name => {
+        events[name] = createEvent(
+            EVENT_OPTIONS[name],
+            EVENT_METHODS
+        )
+    })
 
     const getValidEvent = name => {
         if (!events[name]) {
@@ -18,16 +28,11 @@ function createViewport(view = window) {
         return events[name]
     }
 
-    const subscribers = createSubscribers(
-        addEventListener.bind(null, view),
-        removeEventListener.bind(null, view)
-    )
-
     const api = {
         on: (name, fn) => {
             let event = getValidEvent(name)
             if (typeof fn === 'function') {
-                subscribers.add(event, fn)
+                event.subscribers.add(fn)
             }
             return api
         },
@@ -35,14 +40,14 @@ function createViewport(view = window) {
         off: (name, fn) => {
             if (name === undefined) {
                 Object.keys(events).forEach(name => {
-                    subscribers.removeAll(events[name])
+                    events[name].subscribers.removeAll()
                 })
             } else {
                 let event = getValidEvent(name)
                 if (typeof fn === 'function') {
-                    subscribers.remove(event, fn)
+                    event.subscribers.remove(fn)
                 } else if (fn === undefined) {
-                    subscribers.removeAll(event)
+                    event.subscribers.removeAll()
                 }
             }
             return api
