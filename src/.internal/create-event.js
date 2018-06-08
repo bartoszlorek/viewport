@@ -10,9 +10,9 @@ function createEvent(runtime) {
         })
     }
     const removeEventPublisher = ({ type, publisher }) => {
-        const { view, addEventListener } = runtime
+        const { view, removeEventListener } = runtime
         type.forEach(name => {
-            addEventListener(view, name, publisher)
+            removeEventListener(view, name, publisher)
         })
     }
 
@@ -25,9 +25,8 @@ function createEvent(runtime) {
             methods
         )
         const self = {}
-
         self.type = options.type
-        self.subscribers = new Container(
+        self.subscribers = new Container(null,
             () => addEventPublisher(self),
             () => removeEventPublisher(self)
         )
