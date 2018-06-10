@@ -24,17 +24,48 @@ function removeEventListener(elem, event, fn) {
     }
 }
 
-function mapArguments(view, args, methods) {
+function dispatchEvent(elem, eventType) {
+    if (elem == null) {
+        return;
+    }
+    if (typeof Event === 'function') {
+        elem.dispatchEvent(new Event(eventType));
+    } else if (elem.document) {
+        var event = elem.document.createEvent('UIEvents');
+        event.initUIEvent(eventType, true, false, elem, 0);
+        elem.dispatchEvent(event);
+    }
+}
+
+function mapArguments(args, methods) {
     if (args != null) {
-        return function () {
-            return args.map(function (arg) {
-                return methods[arg](view, view.document);
+        return function (event) {
+            var values = args.map(function (arg) {
+                return methods[arg]();
             });
+            values.unshift(event);
+            return values;
         };
     }
-    return function () {
-        return null;
+    return function (event) {
+        return [event];
     };
+}
+
+function isEqualArray(arrayA, arrayB, offset) {
+    var lengthA = arrayA == null ? 0 : arrayA.length;
+    var lengthB = arrayB == null ? 0 : arrayB.length;
+
+    if (lengthA !== lengthB) {
+        return false;
+    }
+    var index = offset !== undefined ? offset - 1 : -1;
+    while (++index < lengthA) {
+        if (arrayA[index] !== arrayB[index]) {
+            return false;
+        }
+    }
+    return true;
 }
 
 var toConsumableArray = function (arr) {
@@ -118,7 +149,7 @@ function createEvent(runtime) {
     return function (options, methods) {
         var cachedValues = [];
 
-        var execArgs = mapArguments(runtime.view, options.args, methods);
+        var execArguments = mapArguments(options.args, methods);
         var self = {
             type: options.type,
             subscribers: new Container(null, function () {
@@ -126,27 +157,46 @@ function createEvent(runtime) {
             }, function () {
                 return removeEventPublisher(self);
             }),
-            publisher: function publisher(forceUpdate) {
-                var values = execArgs();
 
-                if (forceUpdate !== true && values !== null) {
-                    var shouldUpdate = values.some(function (value, index) {
-                        return cachedValues[index] !== value;
-                    });
+            publisher: function publisher(event) {
+                var values = execArguments(event),
+                    result = void 0;
+
+                if (values.length > 1) {
+                    var shouldUpdate = !isEqualArray(cachedValues, values, 1);
+
                     cachedValues = values;
                     if (!shouldUpdate) {
                         return false;
                     }
                 }
-
                 self.subscribers.forEach(function (subscriber) {
-                    subscriber.apply(null, values);
+                    result = subscriber.apply(null, values);
                 });
+                if (result !== undefined) {
+                    event.returnValue = result;
+                }
+                return result;
+            },
+
+            clearCache: function clearCache() {
+                cachedValues = [];
+                return self;
             }
         };
 
         return self;
     };
+}
+
+function bindMethods(view, methods) {
+    var result = {};
+    Object.keys(methods).forEach(function (name) {
+        result[name] = function () {
+            return methods[name](view, view.document);
+        };
+    });
+    return result;
 }
 
 var EVENT_OPTIONS = {
@@ -186,14 +236,16 @@ var EVENT_METHODS = {
 function createViewport() {
     var view = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : window;
 
+    var methods = bindMethods(view, EVENT_METHODS);
     var events = {};
+
     var createEvent$$1 = createEvent({
         addEventListener: addEventListener,
         removeEventListener: removeEventListener,
         view: view
     });
     Object.keys(EVENT_OPTIONS).forEach(function (name) {
-        events[name] = createEvent$$1(EVENT_OPTIONS[name], EVENT_METHODS);
+        events[name] = createEvent$$1(EVENT_OPTIONS[name], methods);
     });
 
     var getValidEvent = function getValidEvent(name) {
@@ -229,13 +281,14 @@ function createViewport() {
         },
 
         trigger: function trigger(name) {
-            getValidEvent(name).publisher(true);
+            var event = getValidEvent(name).clearCache();
+            dispatchEvent(view, event.type[0]);
             return api;
         }
 
         // add static methods to the API
-    };Object.keys(EVENT_METHODS).forEach(function (name) {
-        api[name] = EVENT_METHODS[name];
+    };Object.keys(methods).forEach(function (name) {
+        api[name] = methods[name];
     });
 
     return api;

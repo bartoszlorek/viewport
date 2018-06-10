@@ -7,7 +7,6 @@ class ViewEvent {
 
         this.type = options.type
         this.args = mapArguments(
-            runtime.view,
             options.args,
             methods
         )
@@ -20,23 +19,30 @@ class ViewEvent {
         )
     }
 
-    publisher(forceUpdate) {
-        const length = this.subscribers.length
-        const values = this.args()
+    publisher(event) {
+        let values = args(event),
+            result
 
-        if (forceUpdate !== true && values !== null) {
-            let shouldUpdate = values.some((value, index) => {
-                return this.cachedValues[index] !== value
-            })
+        if (values.length > 1) {
+            let shouldUpdate = !isEqualArray(this.cachedValues, values, 1)
+            
             this.cachedValues = values
             if (!shouldUpdate) {
                 return false
             }
         }
-
         this.subscribers.forEach(subscriber => {
-            subscriber.apply(null, values)
+            result = subscriber.apply(null, values)
         })
+        if (result !== undefined) {
+            event.returnValue = result
+        }
+        return result
+    }
+
+    clearCache() {
+        this.cachedValues = []
+        return this
     }
 
     addEventPublisher() {

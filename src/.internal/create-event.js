@@ -1,4 +1,5 @@
 import mapArguments from './map-arguments'
+import isEqualArray from '../.utils/is-equal-array'
 import Container from '../.utils/container'
 
 function createEvent(runtime) {
@@ -17,8 +18,7 @@ function createEvent(runtime) {
     return (options, methods) => {
         let cachedValues = []
 
-        const execArgs = mapArguments(
-            runtime.view,
+        const execArguments = mapArguments(
             options.args,
             methods
         )
@@ -29,23 +29,31 @@ function createEvent(runtime) {
                 () => addEventPublisher(self),
                 () => removeEventPublisher(self)
             ),
-            publisher: forceUpdate => {
-                const length = self.subscribers.length
-                const values = execArgs()
-        
-                if (forceUpdate !== true && values !== null) {
-                    let shouldUpdate = values.some((value, index) => {
-                        return cachedValues[index] !== value
-                    })
+
+            publisher: event => {
+                let values = execArguments(event),
+                    result
+
+                if (values.length > 1) {
+                    let shouldUpdate = !isEqualArray(cachedValues, values, 1)
+                    
                     cachedValues = values
                     if (!shouldUpdate) {
                         return false
                     }
                 }
-        
                 self.subscribers.forEach(subscriber => {
-                    subscriber.apply(null, values)
+                    result = subscriber.apply(null, values)
                 })
+                if (result !== undefined) {
+                    event.returnValue = result
+                }
+                return result
+            },
+
+            clearCache: () => {
+                cachedValues = []
+                return self
             }
         }
 

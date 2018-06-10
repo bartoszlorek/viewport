@@ -1,14 +1,21 @@
 // Browser compatibility
 // IE9+, Firefox, Chrome, Safari, Opera
 
-import { addEventListener, removeEventListener } from './.utils/event-listener'
-import makeCreateEvent from './.internal/create-event'
+import {
+    addEventListener,
+    removeEventListener,
+    dispatchEvent
+} from './.utils/event-polyfill'
 
+import makeCreateEvent from './.internal/create-event'
+import bindMethods from './.internal/bind-methods'
 import EVENT_OPTIONS from './event-options'
 import EVENT_METHODS from './event-methods'
 
 function createViewport(view = window) {
+    const methods = bindMethods(view, EVENT_METHODS)
     const events = {}
+
     const createEvent = makeCreateEvent({
         addEventListener,
         removeEventListener,
@@ -17,7 +24,7 @@ function createViewport(view = window) {
     Object.keys(EVENT_OPTIONS).forEach(name => {
         events[name] = createEvent(
             EVENT_OPTIONS[name],
-            EVENT_METHODS
+            methods
         )
     })
 
@@ -54,14 +61,15 @@ function createViewport(view = window) {
         },
 
         trigger: name => {
-            getValidEvent(name).publisher(true)
+            let event = getValidEvent(name).clearCache()
+            dispatchEvent(view, event.type[0])
             return api
         }
     }
 
     // add static methods to the API
-    Object.keys(EVENT_METHODS).forEach(name => {
-        api[name] = EVENT_METHODS[name]
+    Object.keys(methods).forEach(name => {
+        api[name] = methods[name]
     })
 
     return api
