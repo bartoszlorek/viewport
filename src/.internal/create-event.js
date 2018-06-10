@@ -4,15 +4,13 @@ import Container from '../.utils/container'
 function createEvent(runtime) {
 
     const addEventPublisher = ({ type, publisher }) => {
-        const { view, addEventListener } = runtime
         type.forEach(name => {
-            addEventListener(view, name, publisher)
+            runtime.addEventListener(runtime.view, name, publisher)
         })
     }
     const removeEventPublisher = ({ type, publisher }) => {
-        const { view, removeEventListener } = runtime
         type.forEach(name => {
-            removeEventListener(view, name, publisher)
+            runtime.removeEventListener(runtime.view, name, publisher)
         })
     }
 
@@ -24,29 +22,31 @@ function createEvent(runtime) {
             options.args,
             methods
         )
-        const self = {}
-        self.type = options.type
-        self.subscribers = new Container(null,
-            () => addEventPublisher(self),
-            () => removeEventPublisher(self)
-        )
-        self.publisher = forceUpdate => {
-            const length = self.subscribers.length
-            const values = execArgs()
-    
-            if (forceUpdate !== true && values !== null) {
-                let shouldUpdate = values.some((value, index) => {
-                    return cachedValues[index] !== value
-                })
-                cachedValues = values
-                if (!shouldUpdate) {
-                    return false
+        const self = {
+            type: options.type,
+            subscribers: new Container(
+                null,
+                () => addEventPublisher(self),
+                () => removeEventPublisher(self)
+            ),
+            publisher: forceUpdate => {
+                const length = self.subscribers.length
+                const values = execArgs()
+        
+                if (forceUpdate !== true && values !== null) {
+                    let shouldUpdate = values.some((value, index) => {
+                        return cachedValues[index] !== value
+                    })
+                    cachedValues = values
+                    if (!shouldUpdate) {
+                        return false
+                    }
                 }
+        
+                self.subscribers.forEach(subscriber => {
+                    subscriber.apply(null, values)
+                })
             }
-    
-            self.subscribers.forEach(subscriber => {
-                subscriber.apply(null, values)
-            })
         }
 
         return self

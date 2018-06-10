@@ -101,21 +101,17 @@ function createEvent(runtime) {
     var addEventPublisher = function addEventPublisher(_ref) {
         var type = _ref.type,
             publisher = _ref.publisher;
-        var view = runtime.view,
-            addEventListener = runtime.addEventListener;
 
         type.forEach(function (name) {
-            addEventListener(view, name, publisher);
+            runtime.addEventListener(runtime.view, name, publisher);
         });
     };
     var removeEventPublisher = function removeEventPublisher(_ref2) {
         var type = _ref2.type,
             publisher = _ref2.publisher;
-        var view = runtime.view,
-            removeEventListener = runtime.removeEventListener;
 
         type.forEach(function (name) {
-            removeEventListener(view, name, publisher);
+            runtime.removeEventListener(runtime.view, name, publisher);
         });
     };
 
@@ -123,30 +119,30 @@ function createEvent(runtime) {
         var cachedValues = [];
 
         var execArgs = mapArguments(runtime.view, options.args, methods);
-        var self = {};
-        self.type = options.type;
-        self.subscribers = new Container(null, function () {
-            return addEventPublisher(self);
-        }, function () {
-            return removeEventPublisher(self);
-        });
-        self.publisher = function (forceUpdate) {
-            var length = self.subscribers.length;
-            var values = execArgs();
+        var self = {
+            type: options.type,
+            subscribers: new Container(null, function () {
+                return addEventPublisher(self);
+            }, function () {
+                return removeEventPublisher(self);
+            }),
+            publisher: function publisher(forceUpdate) {
+                var values = execArgs();
 
-            if (forceUpdate !== true && values !== null) {
-                var shouldUpdate = values.some(function (value, index) {
-                    return cachedValues[index] !== value;
-                });
-                cachedValues = values;
-                if (!shouldUpdate) {
-                    return false;
+                if (forceUpdate !== true && values !== null) {
+                    var shouldUpdate = values.some(function (value, index) {
+                        return cachedValues[index] !== value;
+                    });
+                    cachedValues = values;
+                    if (!shouldUpdate) {
+                        return false;
+                    }
                 }
-            }
 
-            self.subscribers.forEach(function (subscriber) {
-                subscriber.apply(null, values);
-            });
+                self.subscribers.forEach(function (subscriber) {
+                    subscriber.apply(null, values);
+                });
+            }
         };
 
         return self;
@@ -202,7 +198,7 @@ function createViewport() {
 
     var getValidEvent = function getValidEvent(name) {
         if (!events[name]) {
-            throw new Error('The \'' + name + '\' is not a valid event name.');
+            throw new Error('\'' + name + '\' is not a valid event name');
         }
         return events[name];
     };
@@ -219,14 +215,14 @@ function createViewport() {
         off: function off(name, fn) {
             if (name === undefined) {
                 Object.keys(events).forEach(function (name) {
-                    events[name].subscribers.removeAll();
+                    events[name].subscribers.empty();
                 });
             } else {
                 var event = getValidEvent(name);
                 if (typeof fn === 'function') {
                     event.subscribers.remove(fn);
                 } else if (fn === undefined) {
-                    event.subscribers.removeAll();
+                    event.subscribers.empty();
                 }
             }
             return api;

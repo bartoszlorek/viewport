@@ -13,7 +13,8 @@ class ViewEvent {
         )
         this.cachedValues = []
         this.publisher = this.publisher.bind(this)
-        this.subscribers = new Container(null,
+        this.subscribers = new Container(
+            null,
             () => this.addEventPublisher(),
             () => this.removeEventPublisher()
         )

@@ -23,7 +23,7 @@ function createViewport(view = window) {
 
     const getValidEvent = name => {
         if (!events[name]) {
-            throw new Error(`The '${name}' is not a valid event name.`)
+            throw new Error(`'${name}' is not a valid event name`)
         }
         return events[name]
     }
@@ -40,14 +40,14 @@ function createViewport(view = window) {
         off: (name, fn) => {
             if (name === undefined) {
                 Object.keys(events).forEach(name => {
-                    events[name].subscribers.removeAll()
+                    events[name].subscribers.empty()
                 })
             } else {
                 let event = getValidEvent(name)
                 if (typeof fn === 'function') {
                     event.subscribers.remove(fn)
                 } else if (fn === undefined) {
-                    event.subscribers.removeAll()
+                    event.subscribers.empty()
                 }
             }
             return api
