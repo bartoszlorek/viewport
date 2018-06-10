@@ -6,10 +6,10 @@ const viewport = createViewport(view = window) // parameter is optional
 ## Events
 Available `events` with their `arguments`.
 ```javascript
-load    []
-unload  []
-resize  [width, height]
-scroll  [scrollX, scrollY]
+load    [event]
+unload  [event]
+resize  [event, width, height]
+scroll  [event, x, y]
 ```
 
 ```javascript
@@ -35,13 +35,17 @@ scroll  [scrollX, scrollY]
 import createViewport from 'viewport'
 const viewport = createViewport()
 
-viewport.on('resize', (width, height) => {
-  console.log(width, height)
+viewport.on('resize', (event, width, height) => {
+  console.log(width, height)  // 800, 400
 })
 
-viewport.on('scroll', (scrollX) => {
-  console.log(scrollX)
+viewport.on('scroll', (event, x) => {
+  console.log(x)  // 200
 })
 
-console.log(viewport.width())
+viewport.on('unload', () => {
+  return 'are you sure?'
+})
+
+console.log(viewport.width())  // 800
 ```
