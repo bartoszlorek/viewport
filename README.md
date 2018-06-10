@@ -39,8 +39,8 @@ viewport.on('resize', (event, width, height) => {
   console.log(width, height)  // 800, 400
 })
 
-viewport.on('scroll', (event, x) => {
-  console.log(x)  // 200
+viewport.on('scroll', (event, x, y) => {
+  console.log(x, y)  // 0, 200
 })
 
 viewport.on('unload', () => {
