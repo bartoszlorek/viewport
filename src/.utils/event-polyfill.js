@@ -21,3 +21,16 @@ export function removeEventListener(elem, event, fn) {
         elem.detachEvent('on' + event, fn)
     }
 }
+
+export function dispatchEvent(elem, eventType) {
+    if (elem == null) {
+        return
+    }
+    if (typeof Event === 'function') {
+        elem.dispatchEvent(new Event(eventType))
+    } else if (elem.document) {
+        let event = elem.document.createEvent('UIEvents')
+        event.initUIEvent(eventType, true, false, elem, 0)
+        elem.dispatchEvent(event)
+    }
+}
