@@ -1,26 +1,26 @@
 ;(function() {
-    const viewport = createViewport()
+    var viewport = createViewport()
     console.log(viewport)
     console.log(viewport.width())
 
-    const handleScroll = (event, scrollX, scrollY) => {
+    var handleScroll = function(event, scrollX, scrollY) {
         console.log(event, scrollX, scrollY)
     }
-    const handleResize = (event, width, height) => {
+    var handleResize = function(event, width, height) {
         console.log(event, width, height)
     }
 
     viewport.on('scroll', handleScroll)
     viewport.on('resize', handleResize)
 
-    viewport.on('load', event => {
+    viewport.on('load', function(event) {
         console.log(event)
     })
-    // viewport.on('unload', event => {
+    // viewport.on('unload', function (event) {
     //     return 'are you sure?'
     // })
 
-    document.onkeydown = event => {
+    document.onkeydown = function(event) {
         event.preventDefault()
         switch (event.code) {
             case 'Space':

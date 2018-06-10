@@ -1,5 +1,5 @@
 function Container(items, loaded, unloaded) {
-    this.items = items != null ? [...items] : []
+    this.items = items != null ? items.slice() : []
     this.loaded = loaded || null
     this.unloaded = unloaded || null
 }
